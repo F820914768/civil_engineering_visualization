@@ -26,6 +26,8 @@ class NodeManager:
         return '{}'.format(self.dict)
     
     def __getitem__(self, nodeId):
+        if not self.exist(nodeId):
+            raise IndexError('{} not found'.format(nodeId))
         return self.anti_dict[nodeId]
     
     def __type_checking(self, coordinate):
