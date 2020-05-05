@@ -241,6 +241,47 @@ class Frame(Structure):
         self.add_storey_with_shift(l, b, h, span_L, span_B)
 
 
+    def add_storey_from_list(self, ls, bs, h):
+        L = 0
+        H_next = self.H + h
+        columns, beams_L, beams_B = [], [], []
+        for l in ls:
+            B = 0
+            for b in bs:
+                beam_L = Beam(self.axe, (L, B, H_next), (L+l, B, H_next))
+                beam_B = Beam(self.axe, (L, B, H_next), (L, B+b, H_next))
+                column = Column(self.axe, (L, B, self.H), (L, B, self.H+h))
+                columns.append(column)
+                beams_L.append(beam_L)
+                beams_B.append(beam_B)
+                B += b
+            L += l
+        
+        L_ = 0
+        for l in ls:
+            beam_L = Beam(self.axe, (L_, B, H_next), (L_+l, B, H_next))
+            column = Column(self.axe, (L_, B, self.H),( L_, B,  self.H+h))
+            beams_L.append(beam_L)
+            columns.append(column)
+            L_ += l
+        B_ = 0
+        for b in bs:
+            beam_B = Beam(self.axe, (L, B_, H_next), (L, B_+b, H_next))
+            column = Column(self.axe,  (L, B_, self.H), (L, B_,  self.H+h))
+            beams_B.append(beam_B)
+            B_ += b
+        
+        columns.append(Column(self.axe,  (L, B, self.H), (L, B,  H_next)))
+        
+        self.columns.append(columns)
+        self.beams_B.append(beam_B)
+        self.beams_L.append(beam_L)
+        self.H += h
+                
+            
+        
+
+
     def set_H(self, h):
         self.H = h
 
@@ -306,47 +347,48 @@ class SymmeticFrame(Frame):
     
 if __name__ == '__main__':
         
-    l, b, h = 6, 8, 3.3
-    span_L, span_B, level_H = 6, 3, 14
-    
+#    l, b, h = 6, 8, 3.3
+#    span_L, span_B, level_H = 6, 3, 14
+#    
+#    frame = Frame(axe)
+#    frame.add_storey(l, b, h, 6, 3)
+#    for i in range(5):
+#        frame.add_storey(l, b, 5, 6, 3)
+#    for i in range(5):
+#        frame.add_storey_with_shift(l, b, 3, 3, 1, (12, 8))
+#    frame.plot_range((0,50) , (0,50) , (0,60))
+#    
+#
+#    frame2 = Frame(axe)
+#    frame2.set_H(28.3)
+#    frame2.add_storey_with_shift(3, 3, 3, 1, 1, (30, 20))
+#    frame.plot()
+#    
+#    
+#    
+#    fig2 = plt.figure(figsize=(10,10))
+#    axe2 = Axes3D(fig2)
+#    
+#    skewColumn1 = Column(axe2, point1=(0,0,0), point2=(6,0,3.3))
+#    skewColumn2 = Column(axe2, point1=(12,0,0), point2=(6,0,3.3))  
+#    
+#    support = SymmetricSupport(axe2)
+#    support.add_templates([skewColumn1, skewColumn2])
+#    support.set_H(5)
+#    support.add_storey(3.3)
+#    support.add_storey(3.3)
+#    support.add_storey(3.3)
+#    support.add_storey(3.3)
+#    
+#    support.plot_range((0, 20), (0, 20), (0, 20))
+#    support.plot()
+#    
+#    
     frame = Frame(axe)
-    frame.add_storey(l, b, h, 6, 3)
-    for i in range(5):
-        frame.add_storey(l, b, 5, 6, 3)
-    for i in range(5):
-        frame.add_storey_with_shift(l, b, 3, 3, 1, (12, 8))
-    frame.plot_range((0,50) , (0,50) , (0,60))
-    
-
-    frame2 = Frame(axe)
-    frame2.set_H(28.3)
-    frame2.add_storey_with_shift(3, 3, 3, 1, 1, (30, 20))
+    for i in range(10):
+        frame.add_storey_from_list([3,3,6,3,3], (6,3,3), 3.3)
+    frame.plot_range((0, 20), (0, 20), (0, 40))
     frame.plot()
-    
-
-    
-    
-    
-    fig2 = plt.figure(figsize=(10,10))
-    axe2 = Axes3D(fig2)
-    
-    skewColumn1 = Column(axe2, point1=(0,0,0), point2=(6,0,3.3))
-    skewColumn2 = Column(axe2, point1=(12,0,0), point2=(6,0,3.3))  
-    
-    support = SymmetricSupport(axe2)
-    support.add_templates([skewColumn1, skewColumn2])
-    support.set_H(5)
-    support.add_storey(3.3)
-    support.add_storey(3.3)
-    support.add_storey(3.3)
-    support.add_storey(3.3)
-    
-    support.plot_range((0, 20), (0, 20), (0, 20))
-    support.plot()
-    
-    
-
-
 
 
 
