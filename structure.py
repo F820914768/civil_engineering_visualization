@@ -212,16 +212,17 @@ class Frame(Structure):
         self.H = 0
         self.level = 0
         
-    def add_storey(self, l, b, h, span_L, span_B):
+    def add_storey_with_shift(self, l, b, h, span_L, span_B, shift=(0,0)):
+        x, y = shift
         H_next = self.H + h
-        columns = [[Column(axe, (i*l, j*b, self.H), (i*l, j*b, H_next)) 
+        columns = [[Column(axe, (i*l+x, j*b+y, self.H), (i*l+x, j*b+y, H_next)) 
                         for i in range(span_L+1)] 
                         for j in range(span_B+1)]
         self.H = H_next
-        beams_L = [[Beam(axe, (i*l, j*b, self.H), ((i+1)*l, j*b, self.H)) 
+        beams_L = [[Beam(axe, (i*l+x, j*b+y, self.H), ((i+1)*l+x, j*b+y, self.H)) 
                         for i in range(span_L)] 
                         for j in range(span_B+1)]
-        beams_B = [[Beam(axe, (i*l, j*b, self.H), ((i)*l, (j+1)*b, self.H)) 
+        beams_B = [[Beam(axe, (i*l+x, j*b+y, self.H), ((i)*l+x, (j+1)*b+y, self.H)) 
                         for i in range(span_L+1)] 
                         for j in range(span_B)]
         
@@ -231,10 +232,13 @@ class Frame(Structure):
         
         self.level += 1
 
+    
+    def add_storey(self, l, b, h, span_L, span_B, shift=(0,0)):
+        self.add_storey_with_shift(l, b, h, span_L, span_B)
 
 
-
-
+    def set_H(self, h):
+        self.H = h
 
 class SymmeticFrame(Frame):
     def __init__(self, axe, l, b, h, span_L, span_B, level_H):
@@ -258,11 +262,15 @@ if __name__ == '__main__':
     for i in range(5):
         frame.add_storey(l, b, 5, 6, 3)
     for i in range(5):
-        frame.add_storey(l, b, 3, 3, 3)
+        frame.add_storey_with_shift(l, b, 3, 3, 1, (12, 8))
     frame.plot_range((0,50) , (0,50) , (0,60))
+    
+
+    frame2 = Frame(axe)
+    frame2.set_H(28.3)
+    frame2.add_storey_with_shift(3, 3, 3, 1, 1, (30, 20))
+    
     frame.plot()
-
-
 
 
 
