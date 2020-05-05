@@ -26,13 +26,11 @@ class NodeManager:
         return '{}'.format(self.dict)
     
     def __getitem__(self, nodeId):
-        if not self.exist(nodeId):
-            raise IndexError('{} not found'.format(nodeId))
         return self.anti_dict[nodeId]
     
     def __type_checking(self, coordinate):
         if not isinstance(coordinate, tuple):
-            coordinate = list(coordinate)
+            coordinate = tuple(coordinate)
         return coordinate
     
     def __iter__(self):
@@ -68,6 +66,7 @@ class NodeManager:
         self.i += 1
     
     def exist(self, coordinate):
+        coordinate = self.__type_checking(coordinate)
         if coordinate in self.dict:
             return True
         else:
@@ -171,57 +170,41 @@ class Structure:
         self.axe.get_proj = short_proj
   
         plt.show(self.axe)
-    
-    def __to_elementArgs(self, l):
+
+
+
+        
+class Support(Structure):
+    def __init__(self, axe):
+        super().__init__(axe)
+        self.level = 0
+        self.H = 0
+        self.template = []
+        self.members = []
+        
+    def set_H(self, h):
+        self.H = h
+        
+    def to_members(self):
         output = []
-        for i in range(len(l)):
-            for j in range(len(l[i])):
-                for k in range(len(l[i][j])):
-                    member = l[i][j][k]   
-                    memberName = member.name
-                    pointId1 = node_manager.get(member.point1)
-                    pointId2 = node_manager.get(member.point2)
-                    output.append([memberName, pointId1, pointId2])
+        for member in self.members:
+            name = member.name
+            pointId1 = node_manager.get(member.point1)
+            pointId2 = node_manager.get(member.point2)
+            output.append([name, pointId1, pointId2])
         return output
-    
-    def __to_elementArgsNth(self, l, n):
-        output = []
-        for j in range(len(l[n])):
-            for k in range(len(l[n][j])):
-                member = l[n][j][k]   
-                memberName = member.name
-                pointId1 = node_manager.get(member.point1)
-                pointId2 = node_manager.get(member.point2)
-                output.append([memberName, pointId1, pointId2])
-        return output      
-    
-    def to_columns_nth(self, n):
-        return  self.__to_elementArgsNth(self.columns, n)
 
-    def to_beamL_nth(self, n):
-        return  self.__to_elementArgsNth(self.beams_L, n)
-    
-    def to_beamB_nth(self, n):
-        return self.__to_elementArgsNth(self.beams_B, n)
-    
-    def to_columns(self):
-        element_columns = self.__to_elementArgs(self.columns)
-        return element_columns  
-    
-    def to_beamL(self):
-        element_beams_L = self.__to_elementArgs(self.beams_L)
-        return element_beams_L  
+class SymmetricSupport(Support):
+    def add_templates(self, members):
+        self.template.extend(members)
         
-    def to_beamB(self):
-        element_beams_B = self.__to_elementArgs(self.beams_B)
-        return element_beams_B  
-
-
-
+    def add_template(self, member):
+        self.template.append(member)
         
-
-        
-
+    def add_storey(self, h):
+        for member in self.template:
+            self.members.append(member.copy_translate((0, 0, self.H)))
+        self.H += h
     
 
 class Frame(Structure):
@@ -261,6 +244,54 @@ class Frame(Structure):
     def set_H(self, h):
         self.H = h
 
+
+    def __to_elementArgs(self, l):
+        output = []
+        for i in range(len(l)):
+            for j in range(len(l[i])):
+                for k in range(len(l[i][j])):
+                    member = l[i][j][k]   
+                    memberName = member.name
+                    pointId1 = node_manager.get(member.point1)
+                    pointId2 = node_manager.get(member.point2)
+                    output.append([memberName, pointId1, pointId2])
+        return output
+
+    def __to_elementArgsNth(self, l, n):
+        output = []
+        for j in range(len(l[n])):
+            for k in range(len(l[n][j])):
+                member = l[n][j][k]   
+                memberName = member.name
+                pointId1 = node_manager.get(member.point1)
+                pointId2 = node_manager.get(member.point2)
+                output.append([memberName, pointId1, pointId2])
+        return output      
+    
+    def to_columns_nth(self, n):
+        return  self.__to_elementArgsNth(self.columns, n)
+
+    def to_beamL_nth(self, n):
+        return  self.__to_elementArgsNth(self.beams_L, n)
+    
+    def to_beamB_nth(self, n):
+        return self.__to_elementArgsNth(self.beams_B, n)
+    
+    def to_columns(self):
+        element_columns = self.__to_elementArgs(self.columns)
+        return element_columns  
+    
+    def to_beamL(self):
+        element_beams_L = self.__to_elementArgs(self.beams_L)
+        return element_beams_L  
+        
+    def to_beamB(self):
+        element_beams_B = self.__to_elementArgs(self.beams_B)
+        return element_beams_B  
+
+
+
+
 class SymmeticFrame(Frame):
     def __init__(self, axe, l, b, h, span_L, span_B, level_H):
         super().__init__(axe)
@@ -290,8 +321,30 @@ if __name__ == '__main__':
     frame2 = Frame(axe)
     frame2.set_H(28.3)
     frame2.add_storey_with_shift(3, 3, 3, 1, 1, (30, 20))
-    
     frame.plot()
+    
+
+    
+    
+    
+    fig2 = plt.figure(figsize=(10,10))
+    axe2 = Axes3D(fig2)
+    
+    skewColumn1 = Column(axe2, point1=(0,0,0), point2=(6,0,3.3))
+    skewColumn2 = Column(axe2, point1=(12,0,0), point2=(6,0,3.3))  
+    
+    support = SymmetricSupport(axe2)
+    support.add_templates([skewColumn1, skewColumn2])
+    support.set_H(5)
+    support.add_storey(3.3)
+    support.add_storey(3.3)
+    support.add_storey(3.3)
+    support.add_storey(3.3)
+    
+    support.plot_range((0, 20), (0, 20), (0, 20))
+    support.plot()
+    
+    
 
 
 
