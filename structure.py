@@ -183,7 +183,27 @@ class Structure:
                     pointId2 = node_manager.get(member.point2)
                     output.append([memberName, pointId1, pointId2])
         return output
-        
+    
+    def __to_elementArgsNth(self, l, n):
+        output = []
+        for j in range(len(l[n])):
+            for k in range(len(l[n][j])):
+                member = l[n][j][k]   
+                memberName = member.name
+                pointId1 = node_manager.get(member.point1)
+                pointId2 = node_manager.get(member.point2)
+                output.append([memberName, pointId1, pointId2])
+        return output      
+    
+    def to_columns_nth(self, n):
+        return  self.__to_elementArgsNth(self.columns, n)
+
+    def to_beamL_nth(self, n):
+        return  self.__to_elementArgsNth(self.beams_L, n)
+    
+    def to_beamB_nth(self, n):
+        return self.__to_elementArgsNth(self.beams_B, n)
+    
     def to_columns(self):
         element_columns = self.__to_elementArgs(self.columns)
         return element_columns  
@@ -198,6 +218,7 @@ class Structure:
 
 
 
+        
 
         
 
@@ -249,11 +270,11 @@ class SymmeticFrame(Frame):
         for i in range(level_H):
             self.add_storey(l, b, h, span_L, span_B)
     
+    
+    
+    
 if __name__ == '__main__':
         
-    
-    
-    
     l, b, h = 6, 8, 3.3
     span_L, span_B, level_H = 6, 3, 14
     
