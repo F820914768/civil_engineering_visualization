@@ -1,20 +1,98 @@
-# -*- coding: utf-8 -*-
-"""
-Spyder Editor
-
-This is a temporary script file.
-"""
-
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d import proj3d
 import numpy as np
 
+fig = plt.figure(figsize=(10,10))
+axe = Axes3D(fig)
+GLOBAL_NAME = 0
 
+class NodeManager:
+    '''
+    To manage id and coordinate of nodes
+    
+    methods:
+        self.get(coordinate): get a nodeId by coordinate
+        self.anti_get(nodeId): get coordinate by nodeId
+        self.get_all(): get all nodeId, coordinate
+    '''
+    def __init__(self):
+        self.dict = {}
+        self.anti_dict = {}
+        self.i = 0
 
+    def __repr__(self):
+        return '{}'.format(self.dict)
+    
+    def __getitem__(self, nodeId):
+        return self.anti_dict[nodeId]
+    
+    def __type_checking(self, coordinate):
+        if not isinstance(coordinate, tuple):
+            coordinate = list(coordinate)
+        return coordinate
+    
+    def __iter__(self):
+        nodes = self.get_all()
+        for node in nodes:
+            yield node
+            
+    def __len__(self):
+        return self.i
+        
+    def get(self, coordinate):
+        '''
+        get nodeId by coordinate
+        
+        Examples
+        --------
+        >>> node_manager.get((4,3,1))
+        0
+        '''
+        coordinate = self.__type_checking(coordinate)
+        return self.dict[coordinate]
+        
+    def anti_get(self, node_id):
+        return self.anti_dict[node_id]
+    
+    def add(self, coordinate):
+        coordinate = self.__type_checking(coordinate)
+        if coordinate in self.dict:
+            return True
+        
+        self.dict[coordinate] = self.i
+        self.anti_dict[self.i] = coordinate
+        self.i += 1
+    
+    def exist(self, coordinate):
+        if coordinate in self.dict:
+            return True
+        else:
+            return False
+    
+    def delete(self, coordinate):
+        if self.exist(coordinate):
+            key = self.get(coordinate)
+            self.dict.pop(coordinate)
+            self.anti_dict.pop(key)
+    
+    def get_all(self):
+        output = []
+        for key in self.dict:
+            output.append([self.get(key), *key])
+        return output
+    
+
+    
+node_manager = NodeManager() 
+
+    
+    
+    
 class Column:
-    def __init__(self, axe, point1, point2, color = 'blue'):
+    def __init__(self, axe, point1, point2, color = 'blue', type_='column'):
+        global GLOBAL_NAME
         self.X = np.array([point1[0], point2[0]])
         self.Y = np.array([point1[1], point2[1]])
         self.Z = np.array([point1[2], point2[2]])
@@ -22,9 +100,26 @@ class Column:
         self.height = self.Z[1] - self.Z[0]
         self.point1 = point1
         self.point2 = point2
+        self.__type = type_
         
         self.axe.plot(self.X, self.Y, self.Z, color = color)
-
+        
+        node_manager.add(point1)
+        node_manager.add(point2)
+        self.name = GLOBAL_NAME
+        GLOBAL_NAME += 1
+        
+    def __getitem__(self, pos):
+        if pos == 0:
+            return self.point1
+        elif pos == 1:
+            return self.point2
+    
+    def __repr__(self):
+        presentation = 'a {0} between point{1} and point{2} with id {3}'.format(self.__type,
+                                                  self.point1, self.point2, self.name)
+        return presentation.format(self.__type)
+    
     def copy_translate(self, shift = (0, 0, 3)):
         delta_x, delta_y, delta_z = shift
         
@@ -37,12 +132,15 @@ class Column:
         
         return Column(self.axe, point1, point2)
         
+    def plot(self , axe):
+        axe.plot(self , self.point1, self.point2 , "blue")
+        
 
     
     
 class Beam(Column):
     def __init__(self, axe, point1, point2):
-        super().__init__(axe, point1, point2)   
+        super().__init__(axe, point1, point2, type_ = 'beam')   
         self.height = point1[2]
         
 
@@ -52,57 +150,115 @@ class Structure:
         self.beams_L = []
         self.beams_B = []
         self.axe = axe
-        
-    def plot(self):
-        plt.show(self.axe)
-        
-    def get_all_points(self):
-        points = []
-        for i in range(len(self.columns)):
-            for j in range(len(self.columns[i])):
-                for k in range(len(self.columns[i][j])):
-                    column = self.columns[i][j][k]
-                    points.append(column.point1)
-                    if k == len(self.columns[i][j]) - 1:
-                        points.append(column.point2)
-                    
-        return points
     
+    def plot_range(self, x_range , y_range , z_range):
+        self.x_range = x_range
+        self.y_range = y_range
+        self.z_range = z_range
         
+    def plot(self , scale_x = 0.5 , scale_y = 0.5 , scale_z = 1 ):
+        def short_proj():  
+          return np.dot(Axes3D.get_proj(self.axe), scale)
+    
+        self.axe.set_xlim(self.x_range[0], self.x_range[1])
+        self.axe.set_ylim(self.y_range[0], self.y_range[1])
+        self.axe.set_zlim(self.z_range[0], self.z_range[1])  
+        
+        scale = np.diag([scale_x, scale_y, scale_z, 1.0])
+
+        self.axe.get_proj = short_proj
+  
+        plt.show(self.axe)
+    
+    def __to_elementArgs(self, l):
+        output = []
+        for i in range(len(l)):
+            for j in range(len(l[i])):
+                for k in range(len(l[i][j])):
+                    member = l[i][j][k]   
+                    memberName = member.name
+                    pointId1 = node_manager.get(member.point1)
+                    pointId2 = node_manager.get(member.point2)
+                    output.append([memberName, pointId1, pointId2])
+        return output
+        
+    def to_columns(self):
+        element_columns = self.__to_elementArgs(self.columns)
+        return element_columns  
+    
+    def to_beamL(self):
+        element_beams_L = self.__to_elementArgs(self.beams_L)
+        return element_beams_L  
+        
+    def to_beamB(self):
+        element_beams_B = self.__to_elementArgs(self.beams_B)
+        return element_beams_B  
+
+
+
+
+        
+
+    
+
 class Frame(Structure):
-    def __init__(self, axe, l, b, h, L, B, H):
+    def __init__(self, axe):
+        super().__init__(axe)
+        self.columns = []
+        self.beams_L = []
+        self.beams_B = []
+        self.H = 0
+        self.level = 0
+        
+    def add_storey(self, l, b, h, span_L, span_B):
+        H_next = self.H + h
+        columns = [[Column(axe, (i*l, j*b, self.H), (i*l, j*b, H_next)) 
+                        for i in range(span_L+1)] 
+                        for j in range(span_B+1)]
+        self.H = H_next
+        beams_L = [[Beam(axe, (i*l, j*b, self.H), ((i+1)*l, j*b, self.H)) 
+                        for i in range(span_L)] 
+                        for j in range(span_B+1)]
+        beams_B = [[Beam(axe, (i*l, j*b, self.H), ((i)*l, (j+1)*b, self.H)) 
+                        for i in range(span_L+1)] 
+                        for j in range(span_B)]
+        
+        self.columns.append(columns)
+        self.beams_L.append(beams_L)
+        self.beams_B.append(beams_B)
+        
+        self.level += 1
+
+
+
+
+
+
+class SymmeticFrame(Frame):
+    def __init__(self, axe, l, b, h, span_L, span_B, level_H):
         super().__init__(axe)
         self.l, self.b, self.h = l, b, h
-        self.L, self.B, self.H = L, B, H
+        self.span_L, self.span_B, self.level_H = span_L, span_B, level_H
         
-        self.columns = [[[Column(axe, (i*l, j*b, k*h), (i*l, j*b, (k+1)*h)) 
-                        for i in range(L)] 
-                        for j in range(B)]
-                        for k in range(H)]
-        self.beams_L = [[[Beam(axe, (i*l, j*b, k*h), ((i+1)*l, j*b, k*h)) 
-                        for i in range(L-1)] 
-                        for j in range(B)]
-                        for k in range(H+1)]
-        self.beams_B = [[[Beam(axe, (i*l, j*b, k*h), ((i)*l, (j+1)*b, k*h)) 
-                        for i in range(L)] 
-                        for j in range(B-1)]
-                        for k in range(H+1)]
-        
-    
-
+        for i in range(level_H):
+            self.add_storey(l, b, h, span_L, span_B)
     
 if __name__ == '__main__':
-    fig = plt.figure()
-    axe = Axes3D(fig)
+        
     
     
-    l, b, h = 3, 3, 3
-    L, B, H = 6, 3, 10
     
-    frame = Frame(axe, l, b, h, L, B, H)
+    l, b, h = 6, 8, 3.3
+    span_L, span_B, level_H = 6, 3, 14
+    
+    frame = Frame(axe)
+    frame.add_storey(l, b, h, 6, 3)
+    for i in range(5):
+        frame.add_storey(l, b, 5, 6, 3)
+    for i in range(5):
+        frame.add_storey(l, b, 3, 3, 3)
+    frame.plot_range((0,50) , (0,50) , (0,60))
     frame.plot()
-
-    points = frame.get_all_points()
 
 
 
