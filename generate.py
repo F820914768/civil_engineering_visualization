@@ -9,7 +9,10 @@ import matplotlib as mpl
 
 ls = [6,6,6,6,6]
 bs = [6,3,6]
-hs = [3,3,3,3,3,3,3]
+hs = [3,3,3,3,3]
+ls2 = [6,6,6]
+bs2 = [6,3]
+hs2 = [3,3]
 
 
 
@@ -20,7 +23,8 @@ if __name__ == '__main__':
     for h in hs:
         frame.add_storey_from_list(ls, bs, h)
         
-    
+    for h in hs2:
+        frame.add_storey_from_list(ls2, bs2, h)
     
     skewCol1 = stu.Column(stu.axe, (0, 0, 0), (0, 6, 3))
     skewCol2 = stu.Column(stu.axe, (0, 9, 3), (0, 15, 0))
@@ -34,6 +38,6 @@ if __name__ == '__main__':
     support.plot_range((0,40), (0, 40), (0, 40))
     support.plot()
     
-    
+
 
 
