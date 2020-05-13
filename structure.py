@@ -136,7 +136,15 @@ class Column:
     def plot(self , axe):
         axe.plot(self , self.point1, self.point2 , "blue")
         
-
+    def split(self, num):
+        span = self.height / num
+        x, y = self.point1
+        points = []
+        for i in range(1, num):
+            point = (x, y+span*num)
+            points.append(point)
+            node_manager.add(point)
+        return points
     
     
 class Beam(Column):
