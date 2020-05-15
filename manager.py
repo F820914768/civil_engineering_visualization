@@ -153,13 +153,23 @@ class NodeManager(Manager):
 class MemberManager(Manager):
     def __init__(self):
         super().__init__(key_type_=tuple)
+        self.__object_dict = {}
 
 
-    def add(self, node_pair, **kwargs):
+    def add(self, node_pair, object_, **kwargs):
         super().add(node_pair, **kwargs)
+        id = self.get(node_pair)
+        self.__object_dict[id] = object_
 
+    def get_object_by_id(self, id):
+        return self.__object_dict[id]
 
-    
+    def get_all_has_attr(self, attr_name):
+        output = []
+        for id, attr in self.id_attributes.items():
+            if attr_name in attr:
+                output.append(id)
+        return output
 
     
 
