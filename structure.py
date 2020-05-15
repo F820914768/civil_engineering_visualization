@@ -3,90 +3,17 @@ import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d import proj3d
 import numpy as np
+from manager import NodeManager, MemberManager
+
 
 fig = plt.figure(figsize=(10,10))
 axe = Axes3D(fig)
 GLOBAL_NAME = 0
 
-class NodeManager:
-    '''
-    To manage id and coordinate of nodes
-    
-    methods:
-        self.get(coordinate): get a nodeId by coordinate
-        self.anti_get(nodeId): get coordinate by nodeId
-        self.get_all(): get all nodeId, coordinate
-    '''
-    def __init__(self):
-        self.dict = {}
-        self.anti_dict = {}
-        self.i = 0
-
-    def __repr__(self):
-        return '{}'.format(self.dict)
-    
-    def __getitem__(self, nodeId):
-        return self.anti_dict[nodeId]
-    
-    def __type_checking(self, coordinate):
-        if not isinstance(coordinate, tuple):
-            coordinate = tuple(coordinate)
-        return coordinate
-    
-    def __iter__(self):
-        nodes = self.get_all()
-        for node in nodes:
-            yield node
-            
-    def __len__(self):
-        return self.i
-        
-    def get(self, coordinate):
-        '''
-        get nodeId by coordinate
-        
-        Examples
-        --------
-        >>> node_manager.get((4,3,1))
-        0
-        '''
-        coordinate = self.__type_checking(coordinate)
-        return self.dict[coordinate]
-        
-    def anti_get(self, node_id):
-        return self.anti_dict[node_id]
-    
-    def add(self, coordinate):
-        coordinate = self.__type_checking(coordinate)
-        if coordinate in self.dict:
-            return True
-        
-        self.dict[coordinate] = self.i
-        self.anti_dict[self.i] = coordinate
-        self.i += 1
-    
-    def exist(self, coordinate):
-        coordinate = self.__type_checking(coordinate)
-        if coordinate in self.dict:
-            return True
-        else:
-            return False
-    
-    def delete(self, coordinate):
-        if self.exist(coordinate):
-            key = self.get(coordinate)
-            self.dict.pop(coordinate)
-            self.anti_dict.pop(key)
-    
-    def get_all(self):
-        output = []
-        for key in self.dict:
-            output.append([self.get(key), *key])
-        return output
-    
-
-    
 node_manager = NodeManager() 
+member_manager = MemberManager()
+
+    
 
     
     
@@ -105,10 +32,11 @@ class Column:
         
         self.axe.plot(self.X, self.Y, self.Z, color = color)
         
-        node_manager.add(point1)
-        node_manager.add(point2)
-        self.name = GLOBAL_NAME
-        GLOBAL_NAME += 1
+        node_manager.add(point1); node_manager.add(point2)
+        point1_id, point2_id = node_manager.get(point1), node_manager.get(point2)
+        member_manager.add((point1_id, point2_id))
+        self.name = member_manager.get((point1_id, point2_id))
+
         
     def __getitem__(self, pos):
         if pos == 0:
@@ -138,12 +66,16 @@ class Column:
         
     def split(self, num):
         span = self.height / num
-        x, y = self.point1
+        x, y, z = self.point1
         points = []
+        points_id = []
         for i in range(1, num):
-            point = (x, y+span*num)
+            point = (x, y, z+span*i)
             points.append(point)
             node_manager.add(point)
+            points_id.append(node_manager.get(point))
+        member_manager.add_attribute_by_id(self.name, split = points_id)
+
         return points
     
     
@@ -180,8 +112,6 @@ class Structure:
         plt.show(self.axe)
 
 
-
-        
 class Support(Structure):
     def __init__(self, axe):
         super().__init__(axe)
@@ -201,6 +131,7 @@ class Support(Structure):
             pointId2 = node_manager.get(member.point2)
             output.append([name, pointId1, pointId2])
         return output
+
 
 class SymmetricSupport(Support):
     def add_templates(self, members):
@@ -350,6 +281,7 @@ class SymmeticFrame(Frame):
         for i in range(level_H):
             self.add_storey(l, b, h, span_L, span_B)
     
+
     
     
     
@@ -395,10 +327,32 @@ if __name__ == '__main__':
     frame = Frame(axe)
     for i in range(10):
         frame.add_storey_from_list([3,3,6,3,3], (6,3,3), 3.3)
-    frame.plot_range((0, 20), (0, 20), (0, 40))
-    frame.plot()
+    # frame.plot_range((0, 20), (0, 20), (0, 40))
+    # frame.plot()
+
+    c1 = frame.columns[1][0]
+    print(c1, '\n')
+    print('split into these point:\t', c1.split(3), '\n')
+    print('column', c1.name,'has attribute', member_manager.get_attribute_by_id(c1.name))
 
 
+    node_manager.add_attribute_by_id(1, type = 'support', mass = 10)
+    node_manager.add_attribute_by_id(3, type = 'support', mass = 10)
+    node_manager.add_attribute_by_id(5, type = 'support', mass = 10)
+    node_manager.add_attribute_by_id(5, type = 'a', mass = 20)
+    node_manager.add_attribute_by_id(6, type = 'support', mass = 10)
+    node_manager.add_attribute_by_id(4, type = 'support', mass = 10)
+    node_manager.get_attribute_by_id(1)
+
+    supports = []
+    print(node_manager.id_attributes)
+    special_ids = node_manager.get_all_with_attrs(type='support', mass=10)
+    print(special_ids)
+
+    # id_c1 = c1.name
+    # member_manager.add_attribute_by_id(id_c1, floor = 1, kind = 'truss')
+    # print(c1.name)
+    # print(member_manager.get_attribute_by_id(id_c1))
 
 
 
