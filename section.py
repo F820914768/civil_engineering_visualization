@@ -12,31 +12,45 @@ class Section:
         self.ax = plt.subplot(111)
 
 
+
 class HSection(Section):
     def __init__(self, Bu, Bl, H, tu, tl, tm):
         super().__init__(H, max(Bu, Bl))
-        self.Bu = Bu
-        self.Bl = Bl
-        self.tu, self.tl, self.tm = tu, tl, tm
-
-    def plot(self, range=((-500, 500), (500, 500))):
+        self.top_flange_width = Bu
+        self.low_flange_width = Bl
+        self.top_flange_thickness = tu
+        self.low_flange_thickness = tl
+        self.height = H
+        self.web_thickness = tm
+        self.low_flange_main_point_1 = [-Bl/2 , -H/2]
+        self.low_flange_main_point_2 = [Bl/2 , -H/2 + tl]
+        self.top_flange_main_point_1 = [-Bu/2 , H/2 - tu]
+        self.top_flange_main_point_2 = [Bu/2 , H/2]
+        self.web_main_point_1 = [-tm/2 , -H/2 + tl]
+        self.web_main_point_2 = [tm/2 , H/2- tl]
+    def plot(self):
         super().plot()
-        self.ax.add_patch(patches.Rectangle((0,0), 
-                                        self.Bl, 
-                                        self.tl))
-        self.ax.add_patch(patches.Rectangle(((self.Bl-self.Bu)/2,
-                                        self.H-self.tu), 
-                                        self.Bu, 
-                                        self.tu))
-        self.ax.add_patch(patches.Rectangle(((self.Bl-self.tm)/2,
-                                        self.tl), 
-                                        self.tm, 
-                                        (self.H-self.tu-self.tl)))
-        self.ax.set(xlim=(-200, 499), ylim=(0, 500))
+        self.ax.add_patch(patches.Rectangle(self.low_flange_main_point_1 , 
+                                            self.low_flange_width, 
+                                            self.low_flange_thickness , color='r'))
+        self.ax.add_patch(patches.Rectangle(self.top_flange_main_point_1, 
+                                            self.top_flange_width, 
+                                            self.top_flange_thickness, color='r'))
+        self.ax.add_patch(patches.Rectangle(self.web_main_point_1, 
+                                            self.web_thickness, 
+                                            (self.height-self.top_flange_thickness-
+                                             self.low_flange_thickness), color='r'))
+        self.ax.set(xlim=(-500, 500), ylim=(-500, 500))
+        plt.axis('equal')
+        plt.grid()
         plt.show()
 
     def compute_area(self):
-        return self.Bu*self.tu + self.Bl*self.tl + (self.H - self.tu - self.tl)*self.tm
+        self.area = (self.top_flange_width * self.top_flange_thickness 
+                     + self.low_flange_width * self.low_flange_thickness 
+                     + (self.height - self.top_flange_thickness - self.low_flange_thickness)
+                     *self.web_thickness)
+        return self.area
     
     def compute_Ix(self):
         pass
@@ -44,34 +58,24 @@ class HSection(Section):
     def compute_Iy(self):
         pass
 
-    def get_coordinates(self):
-        pass
 
 
-class TSection(Section):
-    def __init__(self, B, H, tu, tm):
-        super().__init__(B, H)
-        self.tu, self.tm = tu, tm
-
-    def plot(self):
-        super().plot()
-        self.ax.add_patch(patches.Rectangle((0,
-                                        self.H-self.tu), 
-                                        self.B, 
-                                        self.tu))
-        self.ax.add_patch(patches.Rectangle(((self.B-self.tm)/2,
-                                        0), 
-                                        self.tm, 
-                                        (self.H-self.tu)))
-        self.ax.set(xlim=(-200, 499), ylim=(0, 500))
-        plt.show()
-        
 if __name__ == '__main__':
-    h_test = HSection(400, 300, 200, 18, 12, 8)
-    h_test.plot()
+    lvl_01_05_col = HSection(600, 600, 600, 30, 30, 30)
     
-    print(h_test.compute_area())
-
-    T_test = TSection(400, 400, 12, 18)
-    T_test.plot()
+    lvl_06_10_col = HSection(550, 550, 550, 24, 24, 24)
+    
+    lvl_11_14_col = HSection(500, 500, 500, 20, 20, 20)
+    
+    lvl_all_beam = HSection(500, 500, 300, 12, 12, 24)
+    
+#    h_test = HSection(600, 600, 600, 30, 30, 30)
+#    h_test.plot()
+#    print(h_test.low_flange_main_point_1)
+#    print(h_test.low_flange_main_point_2)
+#    print(h_test.top_flange_main_point_1)
+#    print(h_test.top_flange_main_point_2)
+#    print(h_test.web_main_point_1)
+#    print(h_test.web_main_point_2)
+#    print(h_test.compute_area())
 
