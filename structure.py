@@ -14,10 +14,6 @@ node_manager = NodeManager()
 member_manager = MemberManager()
 
     
-
-    
-    
-    
 class Column:
     def __init__(self, axe, point1, point2, color = 'blue', type_='column'):
         global GLOBAL_NAME
@@ -34,7 +30,7 @@ class Column:
         
         node_manager.add(point1); node_manager.add(point2)
         point1_id, point2_id = node_manager.get(point1), node_manager.get(point2)
-        member_manager.add((point1_id, point2_id))
+        member_manager.add((point1_id, point2_id), self)
         self.name = member_manager.get((point1_id, point2_id))
 
         
@@ -335,7 +331,7 @@ if __name__ == '__main__':
     print(c1, '\n')
     print('split into these point:\t', c1.split(3), '\n')
     print('column', c1.name,'has attribute', member_manager.get_attribute_by_id(c1.name))
-
+    print(member_manager.dict)
 
     node_manager.add_attribute_by_id(1, type = 'support', mass = 10)
     node_manager.add_attribute_by_id(3, type = 'support', mass = 10)
@@ -352,10 +348,10 @@ if __name__ == '__main__':
 
     
     print(member_manager.get_attribute_by_id(65)['split'])
-    # id_c1 = c1.name
-    # member_manager.add_attribute_by_id(id_c1, floor = 1, kind = 'truss')
-    # print(c1.name)
-    # print(member_manager.get_attribute_by_id(id_c1))
+    id_c1 = c1.name
+    member_manager.add_attribute_by_id(id_c1, floor = 1, kind = 'truss')
+    print(c1.name)
+    print(member_manager.get_attribute_by_id(id_c1))
 
 
 
