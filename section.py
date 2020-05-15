@@ -12,7 +12,6 @@ class Section:
         self.ax = plt.subplot(111)
 
 
-
 class HSection(Section):
     def __init__(self, Bu, Bl, H, tu, tl, tm):
         super().__init__(H, max(Bu, Bl))
@@ -45,11 +44,34 @@ class HSection(Section):
     def compute_Iy(self):
         pass
 
+    def get_coordinates(self):
+        pass
 
 
+class TSection(Section):
+    def __init__(self, B, H, tu, tm):
+        super().__init__(B, H)
+        self.tu, self.tm = tu, tm
+
+    def plot(self):
+        super().plot()
+        self.ax.add_patch(patches.Rectangle((0,
+                                        self.H-self.tu), 
+                                        self.B, 
+                                        self.tu))
+        self.ax.add_patch(patches.Rectangle(((self.B-self.tm)/2,
+                                        0), 
+                                        self.tm, 
+                                        (self.H-self.tu)))
+        self.ax.set(xlim=(-200, 499), ylim=(0, 500))
+        plt.show()
+        
 if __name__ == '__main__':
     h_test = HSection(400, 300, 200, 18, 12, 8)
     h_test.plot()
     
     print(h_test.compute_area())
+
+    T_test = TSection(400, 400, 12, 18)
+    T_test.plot()
 

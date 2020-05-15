@@ -68,12 +68,13 @@ class Column:
         span = self.height / num
         x, y, z = self.point1
         points = []
-        points_id = []
+        points_id = [node_manager.get(self.point1)]
         for i in range(1, num):
             point = (x, y, z+span*i)
             points.append(point)
             node_manager.add(point)
             points_id.append(node_manager.get(point))
+        points_id.append(node_manager.get(self.point2))
         member_manager.add_attribute_by_id(self.name, split = points_id)
 
         return points
@@ -349,6 +350,8 @@ if __name__ == '__main__':
     special_ids = node_manager.get_all_with_attrs(type='support', mass=10)
     print(special_ids)
 
+    
+    print(member_manager.get_attribute_by_id(65)['split'])
     # id_c1 = c1.name
     # member_manager.add_attribute_by_id(id_c1, floor = 1, kind = 'truss')
     # print(c1.name)
