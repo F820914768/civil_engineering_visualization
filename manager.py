@@ -96,13 +96,13 @@ class Manager:
         id = self.get(key)
         #print(kwargs)
         if kwargs:
-            if self.has_attribute(key):
-                self.key_attributes[key].update(kwargs)
-            else: self.key_attributes[key] = kwargs
+            if not self.has_attribute(key):
+                self.key_attributes[key] = {}
+            self.key_attributes[key].update(kwargs)
 
-            if self.has_attribute_by_id(id):
-                self.id_attributes[id].update(kwargs)
-            else: self.id_attributes[id] = kwargs
+            if not self.has_attribute_by_id(id):
+                self.id_attributes[id] = {}
+            self.id_attributes[id].update(kwargs)
 
     def add_attribute_by_id(self, id, **kwargs):
         key = self.anti_get(id) #; print(kwargs)
