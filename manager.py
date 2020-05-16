@@ -75,12 +75,12 @@ class Manager:
 
     def has_attribute(self, key):
         key = self.__type_checking(key)
-        if key in self.key_attributes:
+        if key in self.key_attributes and key in self.dict:
             return True
         return False
 
     def has_attribute_by_id(self, id):
-        if id in self.id_attributes:
+        if id in self.id_attributes and id in self.anti_dict:
             return True
         return False
 
@@ -113,6 +113,8 @@ class Manager:
         special_ids = []
         for id in ids:
             attr = self.get_attribute_by_id(id)
+          
+          
             if attr.get(attr_name) == attr_value:
                 special_ids.append(id)
         return special_ids
@@ -152,6 +154,7 @@ class NodeManager(Manager):
 
 class MemberManager(Manager):
     def __init__(self):
+
         super().__init__(key_type_=tuple)
         self.__object_dict = {}
 

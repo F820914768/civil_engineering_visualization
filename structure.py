@@ -56,7 +56,15 @@ class Column:
         point2 = [X_new[1], Y_new[1], Z_new[1]]
         
         return Column(self.axe, point1, point2)
+    
+    def copy_translate_with_attr(self, shift = (0, 0, 3)):   
+        col = self.copy_translate(shift)
+        col_id = col.name
+        attr = member_manager.get_attribute_by_id(self.name)
+        member_manager.add_attribute_by_id(col_id , **attr)
         
+        return col
+            
     def plot(self , axe):
         axe.plot(self , self.point1, self.point2 , "blue")
         
@@ -80,7 +88,38 @@ class Beam(Column):
     def __init__(self, axe, point1, point2):
         super().__init__(axe, point1, point2, type_ = 'beam')   
         self.height = point1[2]
+        self.length_L = abs(point2[0] - point1[0])
+        self.length_B = abs(point2[1] - point1[1])
         
+    def splitL(self, num):
+        span = self.length_L / num
+        x, y, z = self.point1
+        points = []
+        points_id = [node_manager.get(self.point1)]
+        for i in range(1, num):
+            point = (x+span*i, y, z)
+            points.append(point)
+            node_manager.add(point)
+            points_id.append(node_manager.get(point))
+        points_id.append(node_manager.get(self.point2))
+        member_manager.add_attribute_by_id(self.name, split = points_id)
+
+        return points
+    
+    def splitB(self, num):
+        span = self.length_B / num
+        x, y, z = self.point1
+        points = []
+        points_id = [node_manager.get(self.point1)]
+        for i in range(1, num):
+            point = (x , y+span*i, z)
+            points.append(point)
+            node_manager.add(point)
+            points_id.append(node_manager.get(point))
+        points_id.append(node_manager.get(self.point2))
+        member_manager.add_attribute_by_id(self.name, split = points_id)
+
+        return points
 
 class Structure:
     def __init__(self, axe):
@@ -322,40 +361,41 @@ if __name__ == '__main__':
 #    
 #    
     frame = Frame(axe)
-    for i in range(10):
-        frame.add_storey_from_list([3,3,6,3,3], (6,3,3), 3.3)
-    # frame.plot_range((0, 20), (0, 20), (0, 40))
-    # frame.plot()
-
-    c1 = frame.columns[1][0]
-    print(c1, '\n')
-    print('split into these point:\t', c1.split(3), '\n')
-    print('column', c1.name,'has attribute', member_manager.get_attribute_by_id(c1.name))
-    print(member_manager.dict)
-
-    node_manager.add_attribute_by_id(1, type = 'support', mass = 10)
-    node_manager.add_attribute_by_id(3, type = 'support', mass = 10)
-    node_manager.add_attribute_by_id(5, type = 'support', mass = 10)
-    node_manager.add_attribute_by_id(5, type = 'a', mass = 20)
-    node_manager.add_attribute_by_id(6, type = 'support', mass = 10)
-    node_manager.add_attribute_by_id(4, type = 'support', mass = 10)
-    node_manager.get_attribute_by_id(1)
-
-    supports = []
-    print(node_manager.id_attributes)
-    special_ids = node_manager.get_all_with_attrs(type='support', mass=10)
-    print(special_ids)
-
-    
-    print(member_manager.get_attribute_by_id(65)['split'])
-    id_c1 = c1.name
-    member_manager.add_attribute_by_id(id_c1, floor = 1, kind = 'truss')
-    print(c1.name)
-    print(member_manager.get_attribute_by_id(id_c1))
-
-
+#    for i in range(10):
+#        frame.add_storey_from_list([3,3,6,3,3], (6,3,3), 3.3)
+#    # frame.plot_range((0, 20), (0, 20), (0, 40))
+#    # frame.plot()
+#
+#    c1 = frame.columns[1][0]
+#    print(c1, '\n')
+#    print('split into these point:\t', c1.split(3), '\n')
+#    print('column', c1.name,'has attribute', member_manager.get_attribute_by_id(c1.name))
+#    print(member_manager.dict)
+#
+#    node_manager.add_attribute_by_id(1, type = 'support', mass = 10)
+#    node_manager.add_attribute_by_id(3, type = 'support', mass = 10)
+#    node_manager.add_attribute_by_id(5, type = 'support', mass = 10)
+#    node_manager.add_attribute_by_id(5, type = 'a', mass = 20)
+#    node_manager.add_attribute_by_id(6, type = 'support', mass = 10)
+#    node_manager.add_attribute_by_id(4, type = 'support', mass = 10)
+#    node_manager.get_attribute_by_id(1)
+#
+#    supports = []
+#    print(node_manager.id_attributes)
+#    special_ids = node_manager.get_all_with_attrs(type='support', mass=10)
+#    print(special_ids)
+#
+#    
+#    print(member_manager.get_attribute_by_id(65)['split'])
+#    id_c1 = c1.name
+#    member_manager.add_attribute_by_id(id_c1, floor = 1, kind = 'truss')
+#    print(c1.name)
+#    print(member_manager.get_attribute_by_id(id_c1))
 
 
+#    b = Beam(axe , (0,0,0) , (5,0,0))
+#    b.splitB(5)
+#    print()
 
             
             
