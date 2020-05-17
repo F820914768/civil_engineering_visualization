@@ -58,24 +58,85 @@ class HSection(Section):
     def compute_Iy(self):
         pass
 
+class RectSection(Section):
+    def __init__(self, Bu, H, tu, tl, tmleft , tmright):
+        super().__init__(H, Bu)
+        self.flange_width = Bu
+        self.top_flange_thickness = tu
+        self.low_flange_thickness = tl
+        self.height = H
+        self.web_left_thickness = tmleft
+        self.web_right_thickness = tmright
+        
+        self.low_flange_main_point_1 = [-Bu/2 , -H/2]
+        self.low_flange_main_point_2 = [Bu/2 , -H/2 + tl]
+        
+        self.top_flange_main_point_1 = [-Bu/2 , H/2 - tu]
+        self.top_flange_main_point_2 = [Bu/2 , H/2]
+        
+        self.web_main_left_point_1 = [-Bu/2 , -H/2 + tl]
+        self.web_main_left_point_2 = [-Bu/2 + tmleft , H/2- tu]
+        
+        self.web_main_right_point_1 = [Bu/2 - tmright , -H/2 + tl]
+        self.web_main_right_point_2 = [Bu/2 , H/2- tu]
+        
+    def plot(self):
+        super().plot()
+        self.ax.add_patch(patches.Rectangle(self.low_flange_main_point_1 , 
+                                            self.flange_width, 
+                                            self.low_flange_thickness , color='r'))
+        
+        self.ax.add_patch(patches.Rectangle(self.top_flange_main_point_1, 
+                                            self.flange_width, 
+                                            self.top_flange_thickness, color='r'))
+        
+        self.ax.add_patch(patches.Rectangle(self.web_main_left_point_1, 
+                                            self.web_left_thickness, 
+                                            (self.height-self.top_flange_thickness-
+                                             self.low_flange_thickness), color='r'))
+        
+        self.ax.add_patch(patches.Rectangle(self.web_main_right_point_1, 
+                                            self.web_right_thickness, 
+                                            (self.height-self.top_flange_thickness-
+                                             self.low_flange_thickness), color='r'))
+              
+        self.ax.set(xlim=(-500, 500), ylim=(-500, 500))
+        plt.axis('equal')
+        plt.grid()
+        plt.show()
+
+    def compute_area(self):
+        self.area = (self.flange_width * self.top_flange_thickness 
+                     + self.flange_width * self.low_flange_thickness 
+                     + (self.height - self.top_flange_thickness - self.low_flange_thickness)
+                     *(self.web_left_thickness + self.web_right_thickness))
+        return self.area
+    
+    def compute_Ix(self):
+        pass
+
+    def compute_Iy(self):
+        pass
 
 
 if __name__ == '__main__':
-    lvl_01_05_col = HSection(600, 600, 600, 30, 30, 30)
+#    lvl_01_05_col = HSection(600, 600, 600, 30, 30, 30)
     
-    lvl_06_10_col = HSection(550, 550, 550, 24, 24, 24)
-    
-    lvl_11_14_col = HSection(500, 500, 500, 20, 20, 20)
+#    lvl_06_10_col = HSection(550, 550, 550, 24, 24, 24)
+
+#    lvl_11_14_col = HSection(500, 500, 500, 20, 20, 20)
     
     lvl_all_beam = HSection(500, 500, 300, 12, 12, 24)
+#    lvl_all_beam.plot()
     
-#    h_test = HSection(600, 600, 600, 30, 30, 30)
-#    h_test.plot()
-#    print(h_test.low_flange_main_point_1)
-#    print(h_test.low_flange_main_point_2)
-#    print(h_test.top_flange_main_point_1)
-#    print(h_test.top_flange_main_point_2)
-#    print(h_test.web_main_point_1)
-#    print(h_test.web_main_point_2)
-#    print(h_test.compute_area())
+    lvl_01_05_col = RectSection(600 , 600 , 30 , 30 , 30 , 30)
+#    lvl_01_05_col.plot()
+    
+    lvl_06_10_col = RectSection(550, 550 , 24 , 24 , 24 , 24)
+#    lvl_06_10_col.plot()
+    
+    lvl_11_14_col = RectSection(500, 500 , 20 , 20 , 20 , 20)
+#    lvl_11_14_col.plot()
+
+
 
